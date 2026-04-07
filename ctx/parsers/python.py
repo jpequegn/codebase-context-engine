@@ -107,11 +107,18 @@ def parse_file(path: str, project_root: str) -> FileSymbols:
     )
 
 
+_SKIP_DIRS = {".venv", "venv", ".git", "__pycache__", "node_modules", ".tox", ".mypy_cache", "dist", "build"}
+
+
 def parse_directory(root: str) -> dict[str, FileSymbols]:
-    """Parse all .py files in a directory tree."""
+    """Parse all .py files in a directory tree, skipping common non-project dirs."""
     results = {}
     root_path = Path(root)
     for py_file in sorted(root_path.rglob("*.py")):
+        # Skip files inside directories we want to ignore
+        parts = py_file.relative_to(root_path).parts
+        if any(p in _SKIP_DIRS or p.startswith(".") for p in parts[:-1]):
+            continue
         rel = str(py_file.relative_to(root_path))
         try:
             results[rel] = parse_file(str(py_file), root)

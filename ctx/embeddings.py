@@ -177,7 +177,11 @@ class SemanticSearch:
         self._embeddings = []
         to_embed: list[tuple[int, str]] = []  # (index, content)
 
+        skip_dirs = {".venv", "venv", ".git", "__pycache__", "node_modules", ".tox", ".mypy_cache", "dist", "build"}
         for py_file in sorted(root.rglob("*.py")):
+            parts = py_file.relative_to(root).parts
+            if any(p in skip_dirs or p.startswith(".") for p in parts[:-1]):
+                continue
             rel = str(py_file.relative_to(root))
             source = py_file.read_text()
             mtime = py_file.stat().st_mtime
